@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Articulate – Speak English Clearly</title>
+<meta name="theme-color" content="#14213D">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EDF1F7;--surface:#fff;--ink:#14213D;--mute:#5B6785;--line:#D5DCE8;--accent:#FFB703;--ok:#0F766E;--bad:#B42318;--okbg:#D7F2EE;--badbg:#FBE1DE}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0C1426;--surface:#16213A;--ink:#EEF2FA;--mute:#9AA6C3;--line:#27365A;--ok:#4FD1C0;--bad:#FF8A7A;--okbg:#12403B;--badbg:#4A2420}}
+:root[data-theme=dark]{--bg:#0C1426;--surface:#16213A;--ink:#EEF2FA;--mute:#9AA6C3;--line:#27365A;--ok:#4FD1C0;--bad:#FF8A7A;--okbg:#12403B;--badbg:#4A2420}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-top:env(safe-area-inset-top,0px);display:flex;flex-direction:column}
+h1,h2,.big{font-family:"Bricolage Grotesque",system-ui,sans-serif}
+header{padding:18px 20px 8px;display:flex;justify-content:space-between;align-items:center}
+h1{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.streak{background:var(--ink);color:var(--bg);border-radius:99px;padding:6px 14px;font-weight:600;font-size:14px}
+main{flex:1;overflow-y:auto;padding:8px 20px 20px;max-width:640px;width:100%;margin:0 auto}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:6px 0 14px}
+.tab{flex:none;border:1.5px solid var(--line);background:transparent;color:var(--ink);padding:8px 16px;border-radius:99px;font:600 14px inherit;cursor:pointer}
+.tab[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.card{background:var(--surface);border-radius:22px;padding:22px;border:1px solid var(--line)}
+.meta{color:var(--mute);font-size:14px;display:flex;justify-content:space-between}
+.big{font-size:27px;line-height:1.3;font-weight:600;margin:14px 0 18px;letter-spacing:-.3px}
+.big span{border-radius:6px;padding:0 2px}
+.big .ok{background:var(--okbg);color:var(--ok)}
+.big .miss{background:var(--badbg);color:var(--bad);text-decoration:underline wavy}
+.tip{font-size:14px;color:var(--mute);border-left:3px solid var(--accent);padding-left:12px;margin-bottom:18px}
+.row{display:flex;gap:10px}
+button.act{flex:1;border:0;border-radius:16px;padding:15px;font:700 16px inherit;cursor:pointer}
+.listen{background:var(--bg);color:var(--ink)}
+.speak{background:var(--accent);color:#14213D}
+.speak.rec{background:var(--bad);color:#fff;animation:p 1s infinite}
+@keyframes p{50%{opacity:.7}}
+@media (prefers-reduced-motion:reduce){.speak.rec{animation:none}}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.score{margin-top:18px;display:none}
+.score.on{display:block}
+.num{font:800 54px/1 "Bricolage Grotesque",system-ui;letter-spacing:-2px}
+.heard{color:var(--mute);font-size:14px;margin-top:6px}
+.nav{display:flex;justify-content:space-between;margin-top:14px}
+.nav button{background:none;border:0;color:var(--ink);font:600 15px inherit;padding:10px 4px;cursor:pointer}
+.opts{display:flex;gap:14px;align-items:center;margin-top:10px;font-size:14px;color:var(--mute)}
+.opts label{display:flex;gap:6px;align-items:center}
+.ad{border-top:1px solid var(--line);background:var(--surface);min-height:54px;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:12px;padding-bottom:env(safe-area-inset-bottom,0px)}
+#inter{position:fixed;inset:0;background:rgba(10,15,30,.9);display:none;align-items:center;justify-content:center;z-index:9;padding:24px}
+#inter.on{display:flex}
+#inter .box{background:var(--surface);border-radius:22px;padding:28px;text-align:center;max-width:340px;width:100%}
+#inter button{margin-top:16px;padding:12px 22px;border:0;border-radius:14px;background:var(--ink);color:var(--bg);font:700 15px inherit}
+#inter button:disabled{opacity:.4}
+.warn{font-size:13px;color:var(--bad);margin-top:10px;display:none}
+</style>
+</head>
+<body>
+<header><h1>Articulate</h1><div class="streak" id="streak">0-day streak</div></header>
+<main>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <section class="card">
+    <div class="meta"><span id="cat"></span><span id="pos"></span></div>
+    <p class="big" id="text"></p>
+    <p class="tip" id="tip"></p>
+    <div class="row">
+      <button class="act listen" id="listen">Listen</button>
+      <button class="act speak" id="speak">Speak</button>
+    </div>
+    <div class="opts">
+      <label><input type="checkbox" id="slow"> Slow audio</label>
+      <label>Voice
+        <select id="acc"><option value="en-US">US</option><option value="en-GB">UK</option><option value="en-IN">India</option><option value="en-AU">Australia</option></select>
+      </label>
+    </div>
+    <div class="score" id="score" aria-live="polite">
+      <div class="num" id="num"></div>
+      <div id="verdict"></div>
+      <div class="heard" id="heard"></div>
+    </div>
+    <p class="warn" id="warn">Speech recognition needs Chrome or the Android app with microphone permission.</p>
+    <div class="nav"><button id="prev">Previous</button><button id="next">Next phrase</button></div>
+  </section>
+<p style="text-align:center;color:var(--mute);font-size:12px;margin:18px 0 6px">© 2026 Articulate. All rights reserved.</p></main>
+<div class="ad" id="banner">Banner ad space (320×50)</div>
+<div id="inter" role="dialog" aria-modal="true"><div class="box"><h2>Ad break</h2><p style="color:var(--mute);margin-top:8px">Interstitial ad space</p><button id="skip" disabled>Continue in 3</button></div></div>
+
+<script>
+var DATA={
+"Tongue twisters":[
+["She sells seashells by the seashore.","Keep the 'sh' and 's' sounds sharply different.","Start slow, then speed up."],
+["Red lorry, yellow lorry.","Focus on the 'r' and 'l' switch.","Curl your tongue back for R."],
+["Peter Piper picked a peck of pickled peppers.","Release a small puff of air on every 'p'.",""],
+["How can a clam cram in a clean cream can?","Watch the 'cl' and 'cr' clusters.",""],
+["Three free throws through the thick thicket.","Place your tongue between your teeth for 'th'.",""],
+["Unique New York, you know you need unique New York.","Keep 'n' and 'y' glides smooth.",""]],
+"Daily talk":[
+["Could you please repeat that a little slower?","Stress 'repeat' and 'slower'. Lower your pitch at the end.",""],
+["I would like to schedule a meeting for tomorrow morning.","Say 'schedule' as SKED-jool (US) or SHED-yool (UK).",""],
+["Thank you so much for your time today.","Link 'so much' smoothly: so-much.",""],
+["Let me think about it and get back to you.","Reduce 'to' and 'it' so they sound light.",""],
+["Nice to meet you, I have heard a lot about you.","Rise slightly on 'meet', fall on 'you'.",""],
+["Sorry, I did not catch your name.","Say 'did not' as 'didn't' for a natural flow.",""]],
+"Hard words":[
+["The comfortable vegetable salad was extraordinary.","'Comfortable' has 3 beats: KUMF-ter-bul.",""],
+["The February weather in Wednesday was particularly irregular.","Say Feb-roo-air-ee and WENZ-day.",""],
+["Entrepreneurs often face an enormous amount of uncertainty.","Stress ON-truh-pruh-NURS.",""],
+["The pronunciation of this word is a challenge for many.","Say pruh-NUN-see-AY-shun. Not 'pro-NOUN-ciation'.",""],
+["Her choir sang a clear and beautiful rhythm.","Choir = KWY-er. Rhythm = RIH-thum.",""],
+["Nothing worthwhile is thoroughly easy.","Do not stress the last syllable of 'thoroughly'.",""]],
+"Interview":[
+["I am a results driven professional with five years of experience.","Pause after 'professional'. Keep a steady pace.",""],
+["My greatest strength is solving problems under pressure.","Stress 'strength' clearly. Do not drop the final 'th'.",""],
+["I am excited about this opportunity and ready to contribute.","Emphasise 'excited' and 'contribute'.",""],
+["I work well independently and as part of a team.","Say 'independently' in-di-PEN-dent-lee.",""],
+["Where do you see this company in the next three years?","End with rising intonation.",""]]
+};
+var CAP=window.Capacitor||{},NATIVE=!!(CAP.isNativePlatform&&CAP.isNativePlatform());
+/* ===== ADMOB CONFIG: replace test IDs with your real ad unit IDs, set TEST=false before publishing ===== */
+var ADS={TEST:true,BANNER:"ca-app-pub-3940256099942544/6300978111",INTERSTITIAL:"ca-app-pub-3940256099942544/1033173712"};
+function prepInter(){try{CAP.Plugins.AdMob.prepareInterstitial({adId:ADS.INTERSTITIAL,isTesting:ADS.TEST})}catch(e){}}
+function initAds(){
+  if(!NATIVE||!CAP.Plugins.AdMob)return;
+  var A=CAP.Plugins.AdMob;
+  document.getElementById('banner').style.display='none';
+  document.body.style.paddingBottom='64px';
+  A.initialize({initializeForTesting:ADS.TEST}).then(function(){
+    A.showBanner({adId:ADS.BANNER,adSize:'ADAPTIVE_BANNER',position:'BOTTOM_CENTER',margin:0,isTesting:ADS.TEST});
+    prepInter();
+  }).catch(function(){});
+}
+var cats=Object.keys(DATA),ci=0,pi=0,tries=0,rec=null,listening=false;
+function $(i){return document.getElementById(i)}
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+function norm(s){return s.toLowerCase().replace(/[^a-z0-9' ]/g,' ').split(/\s+/).filter(Boolean)}
+function cur(){return DATA[cats[ci]][pi]}
+function renderTabs(){
+  $('tabs').innerHTML='';
+  cats.forEach(function(c,i){var b=document.createElement('button');b.className='tab';b.textContent=c;b.setAttribute('role','tab');b.setAttribute('aria-selected',i===ci);b.onclick=function(){ci=i;pi=0;renderTabs();render()};$('tabs').appendChild(b)})
+}
+function render(){
+  var c=cur();
+  $('cat').textContent=cats[ci];$('pos').textContent=(pi+1)+' of '+DATA[cats[ci]].length;
+  $('text').textContent=c[0];$('tip').textContent=c[1];$('tip').style.display=c[1]?'block':'none';
+  $('score').classList.remove('on');
+}
+function speak(){
+  if(!window.speechSynthesis)return;
+  speechSynthesis.cancel();
+  var u=new SpeechSynthesisUtterance(cur()[0]);
+  u.lang=$('acc').value;u.rate=$('slow').checked?.65:.95;
+  var v=speechSynthesis.getVoices().filter(function(x){return x.lang.replace('_','-')===u.lang})[0];
+  if(v)u.voice=v;
+  speechSynthesis.speak(u);
+}
+function align(t,s){
+  var n=t.length,m=s.length,d=[],i,j;
+  for(i=0;i<=n;i++){d[i]=[];for(j=0;j<=m;j++)d[i][j]=0}
+  for(i=1;i<=n;i++)for(j=1;j<=m;j++)d[i][j]=t[i-1]===s[j-1]?d[i-1][j-1]+1:Math.max(d[i-1][j],d[i][j-1]);
+  var hit=new Array(n).fill(false);i=n;j=m;
+  while(i>0&&j>0){if(t[i-1]===s[j-1]){hit[i-1]=true;i--;j--}else if(d[i-1][j]>=d[i][j-1])i--;else j--}
+  return hit
+}
+function showResult(said){
+  var words=cur()[0].split(' '),t=words.map(function(w){return norm(w).join('')}),hit=align(t,norm(said).map(function(w){return w.replace(/'/g,'')}).concat([]));
+  var tt=t.map(function(w){return w.replace(/'/g,'')});
+  hit=align(tt,norm(said).map(function(w){return w.replace(/'/g,'')}));
+  var good=hit.filter(Boolean).length,pct=Math.round(good/words.length*100);
+  $('text').innerHTML=words.map(function(w,i){return '<span class="'+(hit[i]?'ok':'miss')+'">'+w+'</span>'}).join(' ');
+  $('num').textContent=pct+'%';
+  $('verdict').textContent=pct>=90?'Excellent. Clear and accurate.':pct>=70?'Good. Repeat the underlined words.':'Keep going. Listen first, then try slower.';
+  $('heard').textContent='We heard: "'+said+'"';
+  $('score').classList.add('on');
+  markDay();
+  tries++;
+  if(tries%3===0)showAd();
+}
+function markDay(){
+  var today=new Date().toISOString().slice(0,10),last=store('last'),s=parseInt(store('streak')||'0',10);
+  if(last!==today){
+    var y=new Date(Date.now()-864e5).toISOString().slice(0,10);
+    s=last===y?s+1:1;store('streak',String(s));store('last',today)
+  }
+  $('streak').textContent=s+'-day streak'
+}
+function mic(){
+  var SRp=NATIVE&&CAP.Plugins.SpeechRecognition;
+  if(SRp){
+    if(listening)return;
+    SRp.requestPermissions().then(function(p){
+      if(p.speechRecognition!=='granted'){$('warn').textContent='Allow microphone access in Settings to practise.';$('warn').style.display='block';return}
+      listening=true;$('speak').classList.add('rec');$('speak').textContent='Listening…';
+      return SRp.start({language:$('acc').value,maxResults:1,prompt:'Say the phrase',partialResults:false,popup:false}).then(function(r){
+        if(r&&r.matches&&r.matches[0])showResult(r.matches[0]);
+      });
+    }).catch(function(){$('warn').textContent='Could not hear you. Check the mic and internet, then try again.';$('warn').style.display='block'}).then(function(){listening=false;$('speak').classList.remove('rec');$('speak').textContent='Speak'});
+    return;
+  }
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){$('warn').style.display='block';return}
+  if(listening){rec&&rec.stop();return}
+  rec=new SR();rec.lang=$('acc').value;rec.interimResults=false;rec.maxAlternatives=1;
+  rec.onstart=function(){listening=true;$('speak').classList.add('rec');$('speak').textContent='Listening… tap to stop'};
+  rec.onend=function(){listening=false;$('speak').classList.remove('rec');$('speak').textContent='Speak'};
+  rec.onerror=function(){$('warn').style.display='block'};
+  rec.onresult=function(e){showResult(e.results[0][0].transcript)};
+  try{rec.start()}catch(e){}
+}
+function showAd(){
+  if(NATIVE&&CAP.Plugins.AdMob){
+    CAP.Plugins.AdMob.showInterstitial().catch(function(){}).then(prepInter);return;
+  }
+  $('inter').classList.add('on');var n=3,b=$('skip');b.disabled=true;b.textContent='Continue in 3';
+  var t=setInterval(function(){n--;if(n<=0){clearInterval(t);b.disabled=false;b.textContent='Continue'}else b.textContent='Continue in '+n},1000)
+}
+$('skip').onclick=function(){$('inter').classList.remove('on')};
+$('listen').onclick=speak;$('speak').onclick=mic;
+$('next').onclick=function(){pi=(pi+1)%DATA[cats[ci]].length;render()};
+$('prev').onclick=function(){var l=DATA[cats[ci]].length;pi=(pi-1+l)%l;render()};
+var s0=store('streak');if(s0){var last=store('last'),y=new Date(Date.now()-864e5).toISOString().slice(0,10),td=new Date().toISOString().slice(0,10);$('streak').textContent=((last===td||last===y)?s0:'0')+'-day streak'}
+renderTabs();render();initAds();
+</script>
+</body>
+</html>
